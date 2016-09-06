@@ -29,6 +29,7 @@
 #include "utils/arib_proginfo.h"
 #include "utils/ts_parser.h"
 #include "utils/tsdstr.h"
+#include "core/default_decoder.h"
 
 #define TS_PACKET_SIZE 188
 
@@ -38,6 +39,7 @@ static int filter_pids[256];
 static int n_filter_pids = 0;
 static int add_pat = 0;
 static int add_pmt = 0;
+static int sync = 1;
 
 typedef struct
 {
@@ -193,46 +195,59 @@ static int filter(const int pid, parse_set_t *set)
 
 static int main_loop(FILE *fp_in, FILE *fp_out)
 {
-	int i;
-	uint8_t p[TS_PACKET_SIZE];
+	int i, n_in, n, c;
+	uint8_t buf[TS_PACKET_SIZE * 256], *buf_out, *p;
 	ts_header_t tsh;
 	parse_set_t set;
 	int64_t in = 0, out = 0, t, last_print = 0;
+	ts_alignment_filter_t f;
 
 	init_set(&set);
 
-	while (fread(p, TS_PACKET_SIZE, 1, fp_in)) {
-		in++;
+	if (sync) {
+		create_ts_alignment_filter(&f);
+	}
 
-		if (in % 16 == 0) {
+	while ((n_in = (int)fread(buf, TS_PACKET_SIZE, sizeof(buf)/TS_PACKET_SIZE, fp_in)) > 0) {
+		if (sync) {
+			ts_alignment_filter(&f, &buf_out, &n, buf, n_in * TS_PACKET_SIZE);
+			n /= TS_PACKET_SIZE;
+		} else {
+			n = n_in;
+			buf_out = buf;
+		}
+		for (c = 0; c < n; c++) {
+			p = &buf_out[c * TS_PACKET_SIZE];
+			in++;
+
 			t = gettime();
 			if (t > last_print + 500) {
-				fprintf(stderr, "in: %10"PRId64", out: %10"PRId64"\r", in * 188, out * 188);
+				fprintf(stderr, "in: %10"PRId64", out: %10"PRId64"\r", in * TS_PACKET_SIZE, out * TS_PACKET_SIZE);
 				last_print = t;
 			}
-		}
 
-		if (!parse_ts_header(p, &tsh)) {
-			if (!set_filter) {
-				fwrite(p, TS_PACKET_SIZE, 1, fp_out);
-			}
-			continue;
-		}
-		if (!tsh.transport_scrambling_control) {
-			if (set.n_services == 0) {
-				parse_PAT(&set.PAT, p, &tsh, &set, pat_handler);
-			} else {
-				for (i = 0; i < set.n_services; i++) {
-					parse_PMT(p, &tsh, &set.PMTs[i], &set.proginfos[i]);
+			if (!parse_ts_header(p, &tsh)) {
+				if (!set_filter) {
+					fwrite(p, TS_PACKET_SIZE, 1, fp_out);
 				}
-				parse_EIT(&set.EIT0x12, p, &tsh, &set, find_curr_service_eit);
-				parse_EIT(&set.EIT0x26, p, &tsh, &set, find_curr_service_eit);
-				parse_EIT(&set.EIT0x27, p, &tsh, &set, find_curr_service_eit);
+				continue;
 			}
-		}
-		if (filter((int)tsh.pid, &set)) {
-			fwrite(p, TS_PACKET_SIZE, 1, fp_out);
-			out++;
+			if (!tsh.transport_scrambling_control) {
+				if (set.n_services == 0) {
+					parse_PAT(&set.PAT, p, &tsh, &set, pat_handler);
+				} else {
+					for (i = 0; i < set.n_services; i++) {
+						parse_PMT(p, &tsh, &set.PMTs[i], &set.proginfos[i]);
+					}
+					parse_EIT(&set.EIT0x12, p, &tsh, &set, find_curr_service_eit);
+					parse_EIT(&set.EIT0x26, p, &tsh, &set, find_curr_service_eit);
+					parse_EIT(&set.EIT0x27, p, &tsh, &set, find_curr_service_eit);
+				}
+			}
+			if (filter((int)tsh.pid, &set)) {
+				fwrite(p, TS_PACKET_SIZE, 1, fp_out);
+				out++;
+			}
 		}
 	}
 
@@ -273,6 +288,8 @@ int main
 		} else if (tsd_strcmp(arg, TSD_TEXT("pat")) == 0) {
 			add_pmt = 1;
 			set_filter = 1;
+		} else if (tsd_strcmp(arg, TSD_TEXT("--nosync")) == 0) {
+			sync = 0;
 		} else {
 			if (n_filter_pids < sizeof(filter_pids) / sizeof(int)) {
 				pid = tsd_atoi(arg);

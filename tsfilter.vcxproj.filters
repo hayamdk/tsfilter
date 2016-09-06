@@ -27,6 +27,9 @@
     <ClCompile Include="utils\aribstr.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="core\default_decoder.c">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\ts_parser.h">
@@ -48,6 +51,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="core\tsdump_def.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="core\default_decoder.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -157,6 +157,7 @@
     <ClCompile Include="utils\aribstr.c" />
     <ClCompile Include="utils\tsdstr.c" />
     <ClCompile Include="utils\ts_parser.c" />
+    <ClCompile Include="core\default_decoder.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\tsdump_def.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="utils\tsdstr.h" />
     <ClInclude Include="core\tsdump.h" />
     <ClInclude Include="utils\ts_parser.h" />
+    <ClInclude Include="core\default_decoder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
