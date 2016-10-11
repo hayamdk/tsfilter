@@ -223,6 +223,7 @@ static int main_loop(FILE *fp_in, FILE *fp_out)
 			t = gettime();
 			if (t > last_print + 500) {
 				fprintf(stderr, "in: %10"PRId64", out: %10"PRId64"\r", in * TS_PACKET_SIZE, out * TS_PACKET_SIZE);
+				fflush(stderr);
 				last_print = t;
 			}
 
@@ -332,6 +333,8 @@ int main
 		fp_out = stdout;
 		my_fprintf(stderr, TSD_TEXT("output: <stdout>\n"));
 	}
+
+	fflush(stderr);
 
 	return main_loop(fp_in, fp_out);
 }
