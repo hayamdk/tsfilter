@@ -1,7 +1,7 @@
 PROGRAM = tsfilter
 
 SOURCES = tsfilter.c utils/aribstr.c
-SOURCES_CP932 = utils/ts_parser.c utils/tsdstr.c core/default_decoder.c
+SOURCES_CP932 = utils/arib_parser.c utils/tsdstr.c core/default_decoder.c
 OBJS = $(SOURCES:.c=.o)
 OBJS_CP932 = $(SOURCES_CP932:.c=.o)
 
