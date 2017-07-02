@@ -27,7 +27,7 @@
 #endif
 
 #include "utils/arib_proginfo.h"
-#include "utils/ts_parser.h"
+#include "utils/arib_parser.h"
 #include "utils/tsdstr.h"
 #include "core/default_decoder.h"
 
