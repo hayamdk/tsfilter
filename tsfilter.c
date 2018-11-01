@@ -294,7 +294,7 @@ int main
 		} else {
 			if (n_filter_pids < sizeof(filter_pids) / sizeof(int)) {
 				pid = tsd_atoi(arg);
-				if (0 <= pid && pid <= 4096) {
+				if (0 <= pid && pid <= 8192) {
 					filter_pids[n_filter_pids++] = pid;
 					set_filter = 1;
 				} else {
